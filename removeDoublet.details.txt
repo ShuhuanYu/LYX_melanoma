@@ -1,0 +1,4 @@
+raw_cell_numbers	cell_numbers_after_qc	cell_numbers_after_removedoublets
+CR177	6176	6176	5908
+CR178	7088	7088	6741
+CR186	8559	8559	8044
