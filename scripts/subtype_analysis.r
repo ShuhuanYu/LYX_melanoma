@@ -96,3 +96,47 @@ dep_factors <- c("LAG3", "PD1", "CTLA4", "TIGIT", "HAVCR2", "TIM3", "TNFRSF9", "
 
 p = FeaturePlot(celltype_cells, features = dep_factors, reduction = "umap")
 ggsave("./plots/CD8+T_cell_depletion_factors_featureplot.pdf", p, width = 10, height = 10)
+
+
+
+### Macrophage subclusters ###
+celltype <- "Macrophage" # 3376 cells
+
+celltype_cells <- melanoma[, Idents(melanoma) %in% celltype] 
+
+celltype_cells <- NormalizeData(celltype_cells, normalization.method = "LogNormalize", scale.factor = 1e4) 
+celltype_cells <- FindVariableFeatures(celltype_cells, selection.method = 'vst', nfeatures = 2000)
+celltype_cells <- ScaleData(celltype_cells,features=rownames(celltype_cells))
+celltype_cells <- RunPCA(celltype_cells, features = VariableFeatures(object = celltype_cells)) 
+ElbowPlot(celltype_cells, ndims=20, reduction="pca")
+
+celltype_cells <- RunHarmony(celltype_cells, group.by.vars="Samples", plot_convergence=TRUE)
+
+celltype_cells <- RunUMAP(celltype_cells, reduction = "harmony", dims = 1:20)
+celltype_cells <- FindNeighbors(celltype_cells, dims = 1:20)
+celltype_cells <- FindClusters(celltype_cells, resolution = 0.5 )
+table(celltype_cells$seurat_clusters) 
+
+rownames(celltype_cells) <- toupper(rownames(celltype_cells))
+
+p1 <- DimPlot(celltype_cells, reduction ="umap", label = TRUE)
+p2 <- DotPlot(celltype_cells, features = c("CD163", "IL10"))
+ggsave("./plots/macrophage_umap_dotplot.pdf", p1+p2, width = 12, height = 6)
+
+xxxmarkers<- FindMarkers(celltype_cells, ident.1 = "1", only.pos = TRUE)
+View(xxxmarkers)
+
+celltype_cells <- RenameIdents(celltype_cells, 
+                        '0' = 'M2',
+                        '1' = 'M2',
+                        '2' = 'M2',
+                        '3' = 'M2',
+                        '4' = 'M1',
+                        '5' = 'M1',
+                        '6' = 'M2'
+                    )
+celltype_cells$celltype <- Idents(celltype_cells)
+p1 <- DimPlot(celltype_cells, reduction ="umap", label = TRUE)
+ggsave("./plots/macropgage_subclusters_umap.pdf", p1, width = 8, height = 7)
+
+saveRDS(celltype_cells, "./tables/macrophage_subclusters.rds")
